@@ -68,9 +68,7 @@ class Blockchain {
             block.previousBlockHash = this.height === -1 ? null : blockchainHeight;
             block.time = Date.now();
             block.height = ++this.height;
-            //console.log('Création du block: ' + JSON.stringify(block));
             block.hash = SHA256(JSON.stringify(block)).toString();
-            //console.log('hash du block créé: ' + block.hash)
             self.validateChain().then(errorLog => {
                 if (errorLog.length === 0) {
                     this.chain.push(block);
@@ -120,7 +118,7 @@ class Blockchain {
         return new Promise(async (resolve, reject) => {
             const timeMessage = parseInt(message.split(':')[1]);
             const currentTime = parseInt(new Date().getTime().toString().slice(0, -3));
-            if ((currentTime - timeMessage) > 30000000) {
+            if ((currentTime - timeMessage) > 300) {
                 reject('time elapsed');
             } else if (bitcoinMessage.verify(message, address, signature)) {
                 let newBody = {
@@ -146,7 +144,7 @@ class Blockchain {
     getBlockByHash(hash) {
         let self = this;
         return new Promise((resolve, reject) => {
-           resolve(self.chain.filter(block => block.hash === hash)[0]);
+           resolve(self.chain.find(block => block.hash === hash));
         });
     }
 
@@ -181,9 +179,7 @@ class Blockchain {
                 let body = JSON.parse(new Buffer.from(block.body, 'hex'));
                 return body.address === address;
             });
-            //blocks.forEach(block => stars.push(block.body.star));
             blocks.forEach(block => stars.push(JSON.parse(new Buffer.from(block.body, 'hex')).star));
-            //blocks.forEach(block => stars.push(body));
             resolve(stars);
         });
     }
@@ -199,9 +195,7 @@ class Blockchain {
         let errorLog = [];
         return new Promise(async (resolve, reject) => {
             self.chain.forEach(block => {
-                //block.validate().catch(e => errorLog.push(`${block.height}th block KO`));
-                //console.log(block);
-                block.validate().catch(e => console.log(e));
+                block.validate().catch(e => errorLog.push(`${block.height}th block KO`));
             });
             resolve(errorLog);
         });

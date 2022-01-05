@@ -47,7 +47,9 @@ class ApplicationServer {
 
 	start() {
 		let self = this;
+		const log = require('debug')('http');
 		this.app.listen(this.app.get("port"), () => {
+			log("Serveur listening... Displayed with debug package");
 			console.log(`Server Listening for port: ${self.app.get("port")}`);
 		});
 	}

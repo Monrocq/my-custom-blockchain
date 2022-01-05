@@ -37,21 +37,16 @@ class Block {
      */
     validate() {
         let self = this;
-        //console.log(self);
         return new Promise((resolve, reject) => {
             // Save in auxiliary variable the current block hash
-            const currentBlockHash = self.hash;
-            //console.log(self.hash);
-            //console.log(currentBlockHash);
-            const blockRecalculated = {...self};
-            blockRecalculated.hash = null;                                
+            const currentBlockHash = self.hash;                            
             // Recalculate the hash of the Block
             // Comparing if the hashes changed
             // Returning the Block is not valid
-            if (self.height !== 0 && SHA256(JSON.stringify(blockRecalculated)).toString() !== currentBlockHash.toString()) {
-                //console.log('actuel hash enregsitré'+ currentBlockHash);
-                //console.log('voici l objet sans le hash' + JSON.stringify(self));
-                //console.log('hash de cet objet regénéré'+SHA256(JSON.stringify(self)).toString());
+            if (self.height !== 0 && SHA256(JSON.stringify({
+                ...self,
+                "hash": null
+            })).toString() !== currentBlockHash.toString()) {
                 reject(false);
             }
             // Returning the Block is valid
