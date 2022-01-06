@@ -73,10 +73,7 @@ class Block {
             const dataHex = self.body;
             const dataString = hex2ascii(dataHex);
             const dataObject = JSON.parse(dataString);
-            if (self.height === 0) {
-                reject('genesis block');
-            }
-            resolve(dataObject);
+            resolve(self.height !== 0 && dataObject);
         })
     }
 

@@ -65,7 +65,7 @@ class Blockchain {
         let self = this;
         return new Promise(async (resolve, reject) => {
            self.getChainHeight().then((blockchainHeight) => {
-            block.previousBlockHash = this.height === -1 ? null : blockchainHeight;
+            block.previousBlockHash = this.height === -1 ? null : self.chain[self.height].hash;
             block.time = Date.now();
             block.height = ++this.height;
             block.hash = SHA256(JSON.stringify(block)).toString();
@@ -174,12 +174,16 @@ class Blockchain {
     getStarsByWalletAddress (address) {
         let self = this;
         let stars = [];
-        return new Promise((resolve, reject) => {
-            let blocks = self.chain.filter(block => {
-                let body = JSON.parse(new Buffer.from(block.body, 'hex'));
-                return body.address === address;
-            });
-            blocks.forEach(block => stars.push(JSON.parse(new Buffer.from(block.body, 'hex')).star));
+        return new Promise(async (resolve, reject) => {
+            //function filter : https://stackoverflow.com/questions/33355528/filtering-an-array-with-a-function-that-returns-a-promise
+            async function filter(arr, callback) {
+                return (await Promise.all(arr.map(async (item) => (await callback(item)) ? JSON.parse(new Buffer.from(item.body, 'hex')) : null))).filter(i=>i!==null);
+            }
+            const bodies = await filter(self.chain, async block => {
+                let blockData = await block.getBData();
+                return blockData.address == address;
+            })
+            stars = bodies.map(body => body.star);
             resolve(stars);
         });
     }
@@ -194,7 +198,10 @@ class Blockchain {
         let self = this;
         let errorLog = [];
         return new Promise(async (resolve, reject) => {
-            self.chain.forEach(block => {
+            self.chain.forEach((block, index) => {
+                if (block.height !== 0 && block.previousBlockHash !== self.chain[index-1].hash) {
+                    errorLog.push(`Error with the order between the ${block.height}th block and the ${self.chain[index-1].height}`);
+                }
                 block.validate().catch(e => errorLog.push(`${block.height}th block KO`));
             });
             resolve(errorLog);
